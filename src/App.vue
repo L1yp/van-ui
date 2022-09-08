@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import Scrollbar from './components/scrollbar/Scrollbar.vue';
+import VScrollbar from './components/scrollbar/src/VScrollbar.vue';
 
 
 </script>
 
 <template>
   <div style="width: 300px">
-    <Scrollbar height="200px">
+    <VScrollbar height="200px" always>
       <p>6666666666666666666666666666</p>
       <p>666666666666666666666666</p>
       <p>666666666666666666666666</p>
@@ -42,7 +42,7 @@ import Scrollbar from './components/scrollbar/Scrollbar.vue';
       <p>666666666666666666666666</p>
       <p>666666666666666666666666</p>
       <p>666666666666666666666666</p>
-    </Scrollbar>
+    </VScrollbar>
   </div>
 
 </template>
