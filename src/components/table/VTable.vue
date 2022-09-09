@@ -1,68 +1,67 @@
 <template>
   <div>
-    <table>
-      <colgroup>
-        <template v-for="column in columns">
-          <col v-if="column.slot.props?.field" :name="column.slot.props?.field" :span="column.colspan" :width="column.slot.props?.width">
-        </template>
-      </colgroup>
-      <thead>
-        <tr
-          v-for="headerRow in headerDefinition"
-        >
-          <template v-for="headerCol in headerRow">
-            <td
-              :name="headerCol.slot.props?.field"
-              :rowspan="headerCol.rowspan"
-              :colspan="headerCol.colspan"
-            >
-              <template v-if="headerCol.slot.children && Object.hasOwn(headerCol.slot.children as object, 'header')">
-                <component :is="((headerCol.slot.children as RawSlots).header)"></component>
-              </template>
-              <template v-else>
-                {{ headerCol.slot.props?.title }}
-              </template>
-            </td>
-
-          </template>
-
-
-        </tr>
-
-      </thead>
-    </table>
-  </div>
-  <div style="width: 380px">
-    <v-scrollbar max-height="200px" always>
+    <div>
       <table>
-        <template v-for="column in columns">
-          <col :name="column.slot.props?.field" :span="column.colspan" :width="column.slot.props?.width">
-        </template>
-        <tbody>
-          <template v-for="row in props.rows">
-            <tr>
-              <template v-for="column in columns">
-                <td>
-                  <template v-if="column.slot.children">
-                    <component :is="column.slot" :row="row" :column="row[column.slot.props?.field]"></component>
-                  </template>
-                  <template v-else>
-                    <span v-text="row[column.slot.props?.field]"></span>
-                  </template>
-                </td>
-                
-              </template>
-            </tr>
+        <colgroup>
+          <template v-for="column in columns">
+            <col v-if="column.slot.props?.field" :name="column.slot.props?.field" :span="column.colspan" :width="column.slot.props?.width">
           </template>
-        </tbody>
-      </table>
-    </v-Scrollbar>
+        </colgroup>
+        <thead>
+          <tr
+            v-for="headerRow in headerDefinition"
+          >
+            <template v-for="headerCol in headerRow">
+              <td
+                :name="headerCol.slot.props?.field"
+                :rowspan="headerCol.rowspan"
+                :colspan="headerCol.colspan"
+              >
+                <template v-if="headerCol.slot.children && Object.hasOwn(headerCol.slot.children as object, 'header')">
+                  <component :is="((headerCol.slot.children as RawSlots).header)"></component>
+                </template>
+                <template v-else>
+                  {{ headerCol.slot.props?.title }}
+                </template>
+              </td>
 
+            </template>
+          </tr>
+        </thead>
+      </table>
+    </div>
+    <div style="width: 380px">
+      <v-scrollbar max-height="200px" always>
+        <table>
+          <template v-for="column in columns">
+            <col :name="column.slot.props?.field" :span="column.colspan" :width="column.slot.props?.width">
+          </template>
+          <tbody>
+            <template v-for="row in props.rows">
+              <tr>
+                <template v-for="column in columns">
+                  <td>
+                    <template v-if="column.slot.children">
+                      <component :is="column.slot" :row="row" :column="row[column.slot.props?.field]"></component>
+                    </template>
+                    <template v-else>
+                      <span v-text="row[column.slot.props?.field]"></span>
+                    </template>
+                  </td>
+                  
+                </template>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </v-scrollbar>
+
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-  import VScrollbar from '@/components/scrollbar/src/VScrollbar.vue'
+import VScrollbar from '@/components/scrollbar/src/VScrollbar.vue'
 import { Slots, useSlots, VNode } from 'vue';
 
 type RawSlots = {
@@ -86,11 +85,11 @@ interface ColumnType {
 const props = defineProps<Props>()
 const slots: Slots = useSlots()
 
-const defSlots: VNode[] = slots.default()
+const defSlots: VNode[] = slots.default!()
 console.log('defSlots', defSlots);
 
 
-const result = []
+const result: ColumnType[] = []
 getColumns(defSlots, result)
 console.log('result', result);
 
@@ -121,10 +120,10 @@ console.log('columns', headerDefinition);
 const maxLevel = headerDefinition.length
 
 function setColspan(root: ColumnType): number {
-  const children: ColumnType[] = root.children
+  const children: ColumnType[] | undefined = root.children
   if (!children) {
     root.colspan = 1
-    return
+    return 1
   }
   let count = 0
   for (const child of children) {
@@ -141,7 +140,7 @@ function setColspan(root: ColumnType): number {
 }
 
 function setRowspan(root: ColumnType, currentLevel: number) {
-  const children: ColumnType[] = root.children
+  const children: ColumnType[] | undefined = root.children
   if (!children) {
     root.rowspan = maxLevel - currentLevel + 1
     return
@@ -175,7 +174,7 @@ function getRealColumns(children: ColumnType[], container: ColumnType[]) {
 
 
 
-const columns = []
+const columns: ColumnType[] = []
 getRealColumns(result, columns)
 console.log('columns', columns);
 
@@ -183,11 +182,11 @@ console.log('columns', columns);
 function getColumns(slots: VNode[], container: ColumnType[]) {
 
   for (const slot of slots) {
-    if (slot.type['name'] === "VColumnGroup") {
-      const children = []
+    if ([slot.type?.__name, slot.type?.name].includes("VColumnGroup")) {
+      const children: ColumnType[] | undefined = []
       container.push({slot, rowspan: 1, colspan: 1, children})
-      getColumns(slot.children['default'](), children)
-    } else if (slot.type['name'] === 'VColumn') {
+      getColumns((slot.children as RawSlots).default(), children)
+    } else if ([slot.type?.__name, slot.type?.name].includes('VColumn')) {
       container.push({
         slot, rowspan: 1, colspan: 1
       })
