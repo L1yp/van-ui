@@ -10,7 +10,7 @@ import { useSlots } from 'vue';
 type Align = 'center' | 'left' | 'right'
 interface Props {
   field: string
-  title: string
+  title?: string
   width?: string | number
   align?: Align
   headerAlign?: Align

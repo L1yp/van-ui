@@ -5,11 +5,12 @@
         <template v-for="column in props.columns">
           <col :name="column.slot.props?.field" :span="column.colspan" :width="column.slot.props?.width">
         </template>
+
         <tbody>
           <template v-for="row in props.rows">
             <tr class="v-table__header--tr">
               <template v-for="column in props.columns">
-                <td class="v-table__cell">
+                <td class="v-table__cell" :class="column.slot.props.align">
                   <template v-if="column.slot.children">
                     <component :is="column.slot" :row="row" :column="row[column.slot.props?.field]"></component>
                   </template>
@@ -31,6 +32,8 @@
 <script lang="ts" setup>
 import { ColumnType } from '../util'
 import VScrollbar from '@/components/scrollbar/src/VScrollbar.vue'
+import Draggable from 'vuedraggable'
+import { computed } from 'vue';
 
 interface Props {
   rows: any[]
@@ -40,9 +43,24 @@ interface Props {
   scrollbarAlways?: boolean
 }
 
+interface Emits {
+  (e: 'update:modelValue', rows: any[]): void
+}
+
+const emits = defineEmits<Emits>()
+
 const props = withDefaults(defineProps<Props>(), {
+  rows: [],
   scrollbarAlways: true
 })
+
+const data = computed<any[]>({
+  get: () => reutrn props.rows,
+  set: (v) => {
+    emits('update:modelValue', v)
+  }
+})
+
 </script>
 
 <style scoped>

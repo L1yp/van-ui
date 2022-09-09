@@ -22,4 +22,17 @@
   border: 1px solid #ebeef5;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding: 10px 16px;
+}
+
+.v-table__cell.center {
+  text-align: center;
+}
+
+.v-table__cell.left {
+  text-align: left;
+}
+
+.v-table__cell.right {
+  text-align: right;
 }

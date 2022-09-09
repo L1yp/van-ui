@@ -14,6 +14,7 @@
             <template v-for="headerCol in headerRow">
               <td
                 class="v-table__cell"
+                :class="headerCol.slot.props?.headerAlign"
                 :name="headerCol.slot.props?.field"
                 :rowspan="headerCol.rowspan"
                 :colspan="headerCol.colspan"
@@ -42,6 +43,8 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+
 
 </script>
 
