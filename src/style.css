@@ -1,0 +1,25 @@
+.v-table {
+  position: relative;
+}
+
+.v-table__header, .v-table__body {
+  border-collapse: collapse;
+  box-sizing: border-box;
+}
+
+.v-table__header {
+  box-sizing: border-box;
+  background-color: #f7f8fc;
+  font-weight: bold;
+}
+
+.v-table__body tr:first-child td {
+  border-top: none;
+
+}
+
+.v-table__cell {
+  border: 1px solid #ebeef5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

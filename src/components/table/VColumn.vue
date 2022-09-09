@@ -11,7 +11,7 @@ type Align = 'center' | 'left' | 'right'
 interface Props {
   field: string
   title: string
-  width: string
+  width?: string | number
   align?: Align
   headerAlign?: Align
   row?: any

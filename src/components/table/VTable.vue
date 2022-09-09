@@ -1,207 +1,70 @@
 <template>
-  <div>
-    <div>
-      <table>
-        <colgroup>
-          <template v-for="column in columns">
-            <col v-if="column.slot.props?.field" :name="column.slot.props?.field" :span="column.colspan" :width="column.slot.props?.width">
-          </template>
-        </colgroup>
-        <thead>
-          <tr
-            v-for="headerRow in headerDefinition"
-          >
-            <template v-for="headerCol in headerRow">
-              <td
-                :name="headerCol.slot.props?.field"
-                :rowspan="headerCol.rowspan"
-                :colspan="headerCol.colspan"
-              >
-                <template v-if="headerCol.slot.children && Object.hasOwn(headerCol.slot.children as object, 'header')">
-                  <component :is="((headerCol.slot.children as RawSlots).header)"></component>
-                </template>
-                <template v-else>
-                  {{ headerCol.slot.props?.title }}
-                </template>
-              </td>
-
-            </template>
-          </tr>
-        </thead>
-      </table>
-    </div>
-    <div style="width: 380px">
-      <v-scrollbar max-height="200px" always>
-        <table>
-          <template v-for="column in columns">
-            <col :name="column.slot.props?.field" :span="column.colspan" :width="column.slot.props?.width">
-          </template>
-          <tbody>
-            <template v-for="row in props.rows">
-              <tr>
-                <template v-for="column in columns">
-                  <td>
-                    <template v-if="column.slot.children">
-                      <component :is="column.slot" :row="row" :column="row[column.slot.props?.field]"></component>
-                    </template>
-                    <template v-else>
-                      <span v-text="row[column.slot.props?.field]"></span>
-                    </template>
-                  </td>
-                  
-                </template>
-              </tr>
-            </template>
-          </tbody>
-        </table>
-      </v-scrollbar>
-
+  <div class="v-table">
+    <div class="v-table__inner-wrapper" ref="innerWrapper">
+      <v-table-header ref="headerRef" :definition="headerDefinition" :columns="columnFields"></v-table-header>
+      <v-table-body 
+        ref="bodyRef"
+        :columns="columnFields" 
+        :rows="props.rows" 
+        :height="props.height"
+        :max-height="props.maxHeight"
+      />
     </div>
   </div>
+
 </template>
 
 <script lang="ts" setup>
-import VScrollbar from '@/components/scrollbar/src/VScrollbar.vue'
-import { Slots, useSlots, VNode } from 'vue';
-
-type RawSlots = {
-    [name: string]: unknown;
-    $stable?: boolean;
-    /* Excluded from this release type: _ctx */
-    /* Excluded from this release type: _ */
-};
+import { onMounted, ref, Slots, useSlots, VNode } from 'vue';
+import { normalizedColumn, getHeaderColumns, getColumnFields } from './util'
+import VTableHeader from './header/VTableHeader.vue';
+import VTableBody from './body/VTableBody.vue';
 
 interface Props {
   rows: any[]
+  height?: string | number
+  maxHeight?: string | number
 }
 
-interface ColumnType {
-  slot: VNode
-  colspan?: number
-  rowspan?: number
-  children?: ColumnType[]
-}
 
 const props = defineProps<Props>()
 const slots: Slots = useSlots()
 
-const defSlots: VNode[] = slots.default!()
-console.log('defSlots', defSlots);
+const columnTree = normalizedColumn(slots)
 
+const headerDefinition = getHeaderColumns(columnTree)
 
-const result: ColumnType[] = []
-getColumns(defSlots, result)
-console.log('result', result);
+const columnFields = getColumnFields(columnTree)
 
-const headerDefinition: ColumnType[][] = []
-
-let currentChildren = [...result]
-
-while (true) {
-  const nextChildren = []
-  const elems = []
-  for (const item of currentChildren) {
-    if (item.children?.length) {
-      nextChildren.push(...item.children)
-    }
-    elems.push(item)
+const headerRef = ref<InstanceType<typeof VTableHeader>>()
+const bodyRef = ref<InstanceType<typeof VTableBody>>()
+const innerWrapper = ref<HTMLDivElement>()
+onMounted(() => {
+  const style = window.getComputedStyle(innerWrapper.value, null)
+  console.log('parent width', style.width)
+  const maxWidth = parseFloat(style.width)
+  const fixedWidth = columnFields.value.filter(it => it.slot.props.width).map(it => parseFloat(it.slot.props.width)).reduce((prev, current) => prev + current)
+  console.log('fixedWidth', fixedWidth);
+  const restWidth = maxWidth - fixedWidth
+  if (restWidth > 0) {
+    console.log('rest width', maxWidth - fixedWidth)
+    const noWidthColumns = columnFields.value.filter(it => !it.slot.props.width)
+    console.log('no width', noWidthColumns);
+    const width = restWidth / noWidthColumns.length
+    noWidthColumns.forEach(it => it.slot.props.width = width)
+    headerRef.value?.$forceUpdate()
+    bodyRef.value?.$forceUpdate()
   }
 
-  headerDefinition.push(elems)
-  if (!nextChildren?.length) {
-    break
-  }
-
-  currentChildren = [...nextChildren]
-}
-console.log('columns', headerDefinition);
-
-// 最大深度
-const maxLevel = headerDefinition.length
-
-function setColspan(root: ColumnType): number {
-  const children: ColumnType[] | undefined = root.children
-  if (!children) {
-    root.colspan = 1
-    return 1
-  }
-  let count = 0
-  for (const child of children) {
-    if (child.children?.length) {
-      const span = setColspan(child)
-      child.colspan = span
-      count += span
-    } else {
-      count ++
-    }
-  }
-  root.colspan = count
-  return count
-}
-
-function setRowspan(root: ColumnType, currentLevel: number) {
-  const children: ColumnType[] | undefined = root.children
-  if (!children) {
-    root.rowspan = maxLevel - currentLevel + 1
-    return
-  }
-
-  for (const child of children) {
-    if (child.children?.length) {
-      child.rowspan = 1
-      setRowspan(child, currentLevel + 1)
-    } else {
-      child.rowspan = maxLevel - currentLevel + 1
-    }
-  }
-}
-
-for (const item of result) {
-  setRowspan(item, 1)
-  setColspan(item)
-}
-
-function getRealColumns(children: ColumnType[], container: ColumnType[]) {
-
-  for (const child of children) {
-    if (child.children?.length) {
-      getRealColumns(child.children, container)
-    } else {
-      container.push(child)
-    }
-  }
-}
-
-
-
-const columns: ColumnType[] = []
-getRealColumns(result, columns)
-console.log('columns', columns);
-
-
-function getColumns(slots: VNode[], container: ColumnType[]) {
-
-  for (const slot of slots) {
-    if ([slot.type?.__name, slot.type?.name].includes("VColumnGroup")) {
-      const children: ColumnType[] | undefined = []
-      container.push({slot, rowspan: 1, colspan: 1, children})
-      getColumns((slot.children as RawSlots).default(), children)
-    } else if ([slot.type?.__name, slot.type?.name].includes('VColumn')) {
-      container.push({
-        slot, rowspan: 1, colspan: 1
-      })
-    }
-  }
-}
-
+})
 
 </script>
 
 <style scoped>
-  table {
-    border-collapse: collapse;
-  }
-  td {
-    border: 1px solid #E3E3E3;
-  }
+table {
+  border-collapse: collapse;
+}
+td {
+  border: 1px solid #E3E3E3;
+}
 </style>
