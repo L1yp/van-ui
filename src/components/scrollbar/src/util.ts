@@ -31,11 +31,15 @@ export const BAR_MAP = {
 export function addUnit(value?: string | number, defaultUnit = 'px') {
   if (!value) return ''
   if (isString(value)) {
+    if (!isNaN(value)) {
+      return `${value}${defaultUnit}`
+    }
     return value
   } else if (isNumber(value)) {
     return `${value}${defaultUnit}`
   }
 }
+
 
 export const renderThumbStyle = ({
   move,

@@ -1,6 +1,21 @@
 .v-table {
   position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
 }
+
+
+.v-table__inner--wrapper{
+  display: flex;
+  flex-direction: column;
+}
+
+.v-table__header--wrapper {
+  overflow-x: hidden;
+  flex-shrink: 0;
+}
+
+
 
 .v-table__header, .v-table__body {
   border-collapse: collapse;
@@ -13,26 +28,87 @@
   font-weight: bold;
 }
 
+.v-table__body--wrapper {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  flex: 1;
+}
+
 .v-table__body tr:first-child td {
   border-top: none;
 
 }
 
-.v-table__cell {
-  border: 1px solid #ebeef5;
+.v-table .v-body__column,
+.v-table .v-header__column {
+  box-sizing: border-box;
+  background-image: none, linear-gradient(#e8eaec,#e8eaec);
+  background-repeat: no-repeat;
+  background-size: 1px 100%,100% 1px;
+  background-position: 100% 0,100% 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 10px 16px;
+  padding: 8px 0;
 }
 
-.v-table__cell.center {
+.v-table.border .v-body__column,
+.v-table.border .v-header__column {
+  background-image: linear-gradient(#e8eaec,#e8eaec),linear-gradient(#e8eaec,#e8eaec);
+}
+
+.v-header__column.center {
   text-align: center;
 }
 
-.v-table__cell.left {
+.v-header__column.left {
   text-align: left;
 }
 
-.v-table__cell.right {
+.v-header__column.right {
   text-align: right;
+}
+
+.v-body__column.center {
+  text-align: center;
+}
+
+.v-body__column.left {
+  text-align: left;
+}
+
+.v-body__column.right {
+  text-align: right;
+}
+
+.v-table .v-cell {
+  box-sizing: border-box;
+  padding: 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-all;
+}
+
+.v-table .v-cell.tooltip {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v-table th.v-header__column {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+th.v-header__column {
+  text-align: unset;
+}
+
+.v-table .v-table__body--tr.striped {
+  background-color: #fafafa;
+}
+
+.v-table .v-table__body--tr:hover {
+  background-color: #f5f7fa;
 }

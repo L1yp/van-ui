@@ -1,11 +1,16 @@
-import { Slots, VNode, computed, ComputedRef } from "vue";
+import { Slots, VNode, computed, ComputedRef, StyleValue } from "vue";
+import { addUnit } from "../scrollbar/src/util";
 
 export type ColumnType = {
   slot: VNode
   colspan: number
   rowspan: number
+  width: number
+  minWidth?: number
   children?: ColumnType[]
 }
+
+export type Align = 'center' | 'left' | 'right'
 
 /**
  * 插槽数据结构化
@@ -130,14 +135,25 @@ function getColumns(slots: VNode[], container: ColumnType[]) {
     /** @ts-ignore */
     if ([slot.type?.__name, slot.type?.name].includes("VColumnGroup")) {
       const children: ColumnType[] | undefined = []
-      container.push({slot, rowspan: 1, colspan: 1, children})
+      container.push({slot, rowspan: 1, colspan: 1, children, width: 0})
       /** @ts-ignore */
       getColumns(slot.children.default(), children)
       /** @ts-ignore */
     } else if ([slot.type?.__name, slot.type?.name].includes('VColumn')) {
       container.push({
-        slot, rowspan: 1, colspan: 1
+        slot, rowspan: 1, colspan: 1, 
+        width: parseFloat(slot.props.width || '0'),
+        minWidth: parseFloat(slot.props.minWidth || '0'),
       })
     }
   }
+}
+
+export function renderCellTooltipStyle(column: ColumnType): StyleValue {
+  if (column.slot.props.showOverflow || column.slot.props['show-overflow']) {
+    return {
+      width: addUnit(column.width - 2)
+    }
+  }
+  return undefined
 }
